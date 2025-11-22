@@ -19,5 +19,9 @@
     "prettier": "^3.2.5",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "@oraichain/lighter-ts-sdk": "^1.0.9",
+    "dotenv": "^17.2.3"
   }
 }

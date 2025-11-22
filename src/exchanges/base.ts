@@ -27,6 +27,8 @@ import type {
 export interface PlaceOrderOptions {
   /** Trading pair symbol (e.g., 'ETH', 'BTC') */
   symbol: string;
+  /** Contract ID (exchange-specific) */
+  contractId: string;
   /** Order side */
   side: OrderSide;
   /** Order type */
@@ -35,6 +37,8 @@ export interface PlaceOrderOptions {
   quantity: string;
   /** Limit price (required for limit orders) */
   price?: string;
+  /** Trigger price (required for stop loss/take profit orders) */
+  triggerPrice?: string;
   /** Client order ID (optional) */
   clientOrderId?: string;
   /** Reduce-only flag */
@@ -42,7 +46,7 @@ export interface PlaceOrderOptions {
   /** Post-only flag (maker order only) */
   postOnly?: boolean;
   /** Time in force (exchange-specific) */
-  timeInForce?: string;
+  timeInForce?: "GTT" | "IOC" | "FOK ";
 }
 
 /**
