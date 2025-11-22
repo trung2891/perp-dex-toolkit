@@ -134,7 +134,10 @@ export class LighterClient extends BaseExchange {
   async placeOrder(options: PlaceOrderOptions): Promise<Order> {
     // TODO: Implement order placement
 
-    const clientOrderId = Date.now();
+    const clientOrderId = options.clientOrderId
+      ? Number(options.clientOrderId)
+      : Date.now();
+
     const marketHelper = await this.getMarketHelper(Number(options.contractId));
 
     const orderPrams: CreateOrderParams = {

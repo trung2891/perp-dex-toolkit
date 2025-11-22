@@ -135,8 +135,12 @@ export class HedgeManager {
     );
 
     // Place long order on first exchange
+    const firstClientOrderId = Date.now();
+    const secondClientOrderId = firstClientOrderId + 1;
+
     const [longOrder, shortOrder] = await Promise.all([
       this.firstExchange.placeOrder({
+        clientOrderId: firstClientOrderId.toString(),
         symbol,
         contractId: firstContractId,
         side: "buy",
@@ -146,6 +150,7 @@ export class HedgeManager {
         timeInForce: "IOC",
       }),
       this.secondExchange.placeOrder({
+        clientOrderId: secondClientOrderId.toString(),
         symbol,
         contractId: secondContractId,
         side: "sell",
