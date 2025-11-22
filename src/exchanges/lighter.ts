@@ -87,17 +87,6 @@ export class LighterClient extends BaseExchange {
         throw new Error(`Invalid time in force: ${timeInForce}`);
     }
   }
-
-  private async symbolToMarketIndex(symbol: string): Promise<number> {
-    const orderBooks = await this.getOrderBooksInfo();
-    const orderBook = orderBooks.find(
-      (orderBook) => orderBook.symbol === symbol
-    );
-    if (!orderBook) {
-      throw new Error(`Order book not found for symbol: ${symbol}`);
-    }
-    return orderBook.market_id;
-  }
   // === Public methods ===
 
   /**
@@ -235,18 +224,27 @@ export class LighterClient extends BaseExchange {
    * Get ticker (market data) for a symbol
    */
   async getTicker(symbol: string): Promise<Ticker> {
-    // TODO: Implement get ticker
-    throw new Error("Not implemented");
+    const exchangeStats = await this.orderApi.getExchangeStats();
+    const orderBook = exchangeStats.order_book_stats.find(
+      (orderBook) => orderBook.symbol === symbol
+    );
+    if (!orderBook) {
+      throw new Error(`Order book not found for symbol: ${symbol}`);
+    }
+    return {
+      symbol: symbol,
+      lastPrice: orderBook.last_trade_price.toString(),
+    };
   }
 
   /**
    * Get order book for a symbol
    */
   async getOrderBook(symbol: string, depth?: number): Promise<OrderBook> {
-    const marketIndex = await this.symbolToMarketIndex(symbol);
+    const marketIndex = await this.resolveContractId(symbol);
 
     const orderBook = await this.orderApi.getOrderBookOrders(
-      marketIndex,
+      Number(marketIndex),
       depth ?? 100
     );
     return {
@@ -268,8 +266,14 @@ export class LighterClient extends BaseExchange {
    * Resolve contract ID from symbol
    */
   async resolveContractId(symbol: string): Promise<string> {
-    // TODO: Implement contract ID resolution
-    throw new Error("Not implemented");
+    const orderBooks = await this.getOrderBooksInfo();
+    const orderBook = orderBooks.find(
+      (orderBook) => orderBook.symbol === symbol
+    );
+    if (!orderBook) {
+      throw new Error(`Order book not found for symbol: ${symbol}`);
+    }
+    return orderBook.market_id.toString();
   }
 
   /**
