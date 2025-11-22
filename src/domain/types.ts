@@ -77,10 +77,12 @@ export interface Position {
   contractId?: string;
   /** Position size (positive for long, negative for short) */
   size: string;
+  /** Position side */
+  side: OrderSide;
   /** Entry price */
   entryPrice: string;
   /** Current mark price */
-  markPrice: string;
+  markPrice?: string;
   /** Current index price */
   indexPrice?: string;
   /** Unrealized PnL */

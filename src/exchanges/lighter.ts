@@ -26,6 +26,9 @@ import {
   ApiClient,
   OrderApi,
   MarketHelper,
+  AccountApi,
+  Account,
+  OrderBook as LighterOrderBook,
 } from "@oraichain/lighter-ts-sdk";
 import type { CreateOrderParams } from "@oraichain/lighter-ts-sdk/dist/signer/wasm-signer-client";
 
@@ -34,11 +37,11 @@ import type { CreateOrderParams } from "@oraichain/lighter-ts-sdk/dist/signer/wa
  */
 export interface LighterConfig extends ExchangeConfig {
   /** API private key */
-  apiKeyPrivateKey?: string;
+  apiKeyPrivateKey: string;
   /** Account index */
-  accountIndex?: number;
+  accountIndex: number;
   /** API key index */
-  apiKeyIndex?: number;
+  apiKeyIndex: number;
 }
 
 /**
@@ -50,22 +53,25 @@ export class LighterClient extends BaseExchange {
   private signerClient: SignerClient;
   private apiClient: ApiClient;
   private orderApi: OrderApi;
+  private accountApi: AccountApi;
 
-  // cache market config
+  // === cache data ===
   private marketHelperCache: Map<number, MarketHelper> = new Map();
+  private orderBookInfoCache: LighterOrderBook[] | null = null;
 
   constructor(config: LighterConfig) {
     super(config);
     this.signerClient = new SignerClient({
       url: config.baseUrl ?? "https://mainnet.zklighter.elliot.ai",
-      privateKey: config.apiKeyPrivateKey ?? "",
-      accountIndex: config.accountIndex ?? 0,
-      apiKeyIndex: config.apiKeyIndex ?? 0,
+      privateKey: config.apiKeyPrivateKey,
+      accountIndex: config.accountIndex,
+      apiKeyIndex: config.apiKeyIndex,
     });
     this.apiClient = new ApiClient({
       host: config.baseUrl ?? "https://mainnet.zklighter.elliot.ai",
     });
     this.orderApi = new OrderApi(this.apiClient);
+    this.accountApi = new AccountApi(this.apiClient);
   }
 
   // === Private methods ===
@@ -81,6 +87,17 @@ export class LighterClient extends BaseExchange {
         throw new Error(`Invalid time in force: ${timeInForce}`);
     }
   }
+
+  private async symbolToMarketIndex(symbol: string): Promise<number> {
+    const orderBooks = await this.getOrderBooksInfo();
+    const orderBook = orderBooks.find(
+      (orderBook) => orderBook.symbol === symbol
+    );
+    if (!orderBook) {
+      throw new Error(`Order book not found for symbol: ${symbol}`);
+    }
+    return orderBook.market_id;
+  }
   // === Public methods ===
 
   /**
@@ -90,6 +107,24 @@ export class LighterClient extends BaseExchange {
     await this.signerClient.initialize();
     await this.signerClient.ensureWasmClient();
     this.connected = true;
+  }
+
+  async getAccounts(): Promise<Account[]> {
+    return this.accountApi.getAccount({
+      by: "index",
+      value: this.config.accountIndex?.toString() ?? "0",
+    });
+  }
+
+  async getOrderBooksInfo(
+    refresh: boolean = false
+  ): Promise<LighterOrderBook[]> {
+    if (this.orderBookInfoCache && !refresh) {
+      return this.orderBookInfoCache;
+    }
+
+    this.orderBookInfoCache = await this.orderApi.getOrderBooks();
+    return this.orderBookInfoCache;
   }
 
   async getMarketHelper(marketIndex: number): Promise<MarketHelper> {
@@ -171,8 +206,21 @@ export class LighterClient extends BaseExchange {
    * Get positions
    */
   async getPositions(options?: GetPositionsOptions): Promise<Position[]> {
-    // TODO: Implement get positions
-    throw new Error("Not implemented");
+    const accounts = await this.getAccounts();
+    const positions = accounts[0].positions.filter(
+      (position) => parseFloat(position.position) > 0
+    );
+
+    return positions.map((position) => ({
+      symbol: position.symbol,
+      contractId: position.market_id.toString(),
+      size: position.position,
+      side: position.sign === 1 ? "buy" : "sell",
+      entryPrice: position.avg_entry_price,
+      unrealizedPnl: position.unrealized_pnl,
+      marginUsed: position.allocated_margin,
+      liquidationPrice: position.liquidation_price,
+    }));
   }
 
   /**
@@ -195,8 +243,25 @@ export class LighterClient extends BaseExchange {
    * Get order book for a symbol
    */
   async getOrderBook(symbol: string, depth?: number): Promise<OrderBook> {
-    // TODO: Implement get order book
-    throw new Error("Not implemented");
+    const marketIndex = await this.symbolToMarketIndex(symbol);
+
+    const orderBook = await this.orderApi.getOrderBookOrders(
+      marketIndex,
+      depth ?? 100
+    );
+    return {
+      symbol: symbol,
+      contractId: marketIndex.toString(),
+      bids: orderBook.bids.map((bid) => ({
+        price: bid.price || "0",
+        quantity: Number(bid.remaining_base_amount || "0").toString(),
+      })),
+      asks: orderBook.asks.map((ask) => ({
+        price: ask.price || "0",
+        quantity: Number(ask.remaining_base_amount || "0").toString(),
+      })),
+      timestamp: Date.now(),
+    };
   }
 
   /**
