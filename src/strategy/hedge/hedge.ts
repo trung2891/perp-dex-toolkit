@@ -1,6 +1,7 @@
 import { IExchange } from "../../exchanges/base";
 import type { Order, OrderSide, Position } from "../../domain/types";
 import { randomBetween, randomIntegerBetween, sleep } from "../../helpers";
+import { TOKEN_AMOUNT_DECIMALS } from "../../config";
 
 /**
  * Configuration for hedge strategy randomization
@@ -76,7 +77,9 @@ export class HedgeManager {
     }
     // Calculate quantity with some precision (6 decimal places)
     const quantity = sizeUSD / lastPrice;
-    return quantity.toFixed(6);
+    return quantity.toFixed(
+      TOKEN_AMOUNT_DECIMALS[symbol as keyof typeof TOKEN_AMOUNT_DECIMALS] || 6
+    );
   }
 
   private calculatePriceWithSlippage(
