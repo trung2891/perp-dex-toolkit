@@ -305,7 +305,7 @@ export class HedgeManager {
 
           // randomize the side of the order
           const { firstSide, secondSide } =
-            randomIntegerBetween(1, 2) === 1
+            randomIntegerBetween(1, 1000) % 2 === 0
               ? { firstSide: "buy", secondSide: "sell" }
               : { firstSide: "sell", secondSide: "buy" };
 
