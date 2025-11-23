@@ -73,7 +73,7 @@ async function start() {
   hedgeManager = new HedgeManager(lighter_1, lighter_2, config);
   await hedgeManager.initialize();
 
-  await hedgeManager.run(["BTC", "ETH", "SOL"]);
+  await hedgeManager.run(["BTC", "ETH"]);
 }
 
 async function stop() {
