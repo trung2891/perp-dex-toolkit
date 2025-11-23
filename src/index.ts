@@ -42,8 +42,8 @@ function validateEnv(): Env {
 
 let hedgeManager: HedgeManager | null = null;
 const config: HedgeConfig = {
-  minSizeUSD: 50,
-  maxSizeUSD: 100,
+  minSizeUSD: 300,
+  maxSizeUSD: 600,
   minSleepBetweenOrdersMs: 1000,
   maxSleepBetweenOrdersMs: 5000,
   minHoldTimeMs: 10000,
