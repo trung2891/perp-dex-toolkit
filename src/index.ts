@@ -2,6 +2,7 @@ import { LighterClient } from "../src/exchanges/lighter";
 import "dotenv/config";
 import { HedgeConfig, HedgeManager } from "../src/strategy/hedge/hedge";
 import { z } from "zod";
+import { TradeHistoryRepository } from "./db/repositories/trade-history.repository";
 
 const envSchema = z.object({
   LIGHTER_API_PRIVATE_KEY_1: z
@@ -69,8 +70,14 @@ async function start() {
     accountIndex: env.LIGHTER_ACCOUNT_INDEX_2,
     apiKeyIndex: env.LIGHTER_API_INDEX_2,
   });
+  const tradeHistoryRepository = new TradeHistoryRepository();
 
-  hedgeManager = new HedgeManager(lighter_1, lighter_2, config);
+  hedgeManager = new HedgeManager(
+    lighter_1,
+    lighter_2,
+    tradeHistoryRepository,
+    config
+  );
   await hedgeManager.initialize();
 
   await hedgeManager.run(["BTC", "ETH"]);
