@@ -136,7 +136,8 @@ export class HedgeManager {
 
     // Place long order on first exchange
     const firstClientOrderId = Date.now();
-    const secondClientOrderId = firstClientOrderId + 1;
+    const secondClientOrderId =
+      firstClientOrderId + randomIntegerBetween(1, 1000);
 
     const [longOrder, shortOrder] = await Promise.all([
       this.firstExchange.placeOrder({
