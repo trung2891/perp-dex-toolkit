@@ -144,7 +144,7 @@ export class HedgeManager {
         clientOrderId: firstClientOrderId.toString(),
         symbol,
         contractId: firstContractId,
-        side: "buy",
+        side: firstSide,
         type: "market",
         quantity: quantity,
         price: firstPrice.toString(),
@@ -154,7 +154,7 @@ export class HedgeManager {
         clientOrderId: secondClientOrderId.toString(),
         symbol,
         contractId: secondContractId,
-        side: "sell",
+        side: secondSide,
         type: "market",
         quantity: quantity,
         price: secondPrice.toString(),
@@ -305,7 +305,7 @@ export class HedgeManager {
 
           // randomize the side of the order
           const { firstSide, secondSide } =
-            randomIntegerBetween(1, 1000) % 2 === 0
+            randomIntegerBetween(1, 2) === 1
               ? { firstSide: "buy", secondSide: "sell" }
               : { firstSide: "sell", secondSide: "buy" };
 
