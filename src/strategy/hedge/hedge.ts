@@ -255,7 +255,7 @@ export class HedgeManager {
     exchange: IExchange,
     positionSide: "buy" | "sell",
     txHash: string
-  ): Promise<void> {
+  ): Promise<TradeHistoryRecord> {
     const matchingInfo = await exchange.getMatchingInfoFromTransactionHash(
       trade.symbol,
       txHash
@@ -267,7 +267,7 @@ export class HedgeManager {
           parseFloat(trade.longEntryPrice ?? "0")) *
         parseFloat(trade.size);
 
-      await this.tradeHistoryRepository.update(trade.id, {
+      const updatedTrade = await this.tradeHistoryRepository.update(trade.id, {
         longExitPrice: matchingInfo.price,
         longCloseTx: txHash,
         longPnl: pnl.toString(),
@@ -275,13 +275,14 @@ export class HedgeManager {
           ? (parseFloat(trade.spread) + pnl).toString()
           : pnl.toString(),
       });
+      return updatedTrade;
     } else {
       // calculate the PnL
       const pnl =
         (parseFloat(trade.shortEntryPrice ?? "0") -
           parseFloat(matchingInfo.price)) *
         parseFloat(trade.size);
-      await this.tradeHistoryRepository.update(trade.id, {
+      const updatedTrade = await this.tradeHistoryRepository.update(trade.id, {
         shortExitPrice: matchingInfo.price,
         shortCloseTx: txHash,
         shortPnl: pnl.toString(),
@@ -289,6 +290,7 @@ export class HedgeManager {
           ? (parseFloat(trade.spread) + pnl).toString()
           : pnl.toString(),
       });
+      return updatedTrade;
     }
   }
 
@@ -307,7 +309,7 @@ export class HedgeManager {
     if (openTrades.length > 1) {
       console.warn(`[HedgeManager] More than one open trade for ${symbol}`);
     }
-    const openTrade = openTrades[0];
+    let openTrade = openTrades[0];
 
     for (let i = 0; i < 5; i++) {
       try {
@@ -356,7 +358,7 @@ export class HedgeManager {
             : null;
 
           if (firstCloseOrder) {
-            await this.updateCloseTrade(
+            openTrade = await this.updateCloseTrade(
               openTrade,
               this.firstExchange,
               firstPosition?.side ?? "buy",
@@ -364,7 +366,7 @@ export class HedgeManager {
             );
           }
           if (secondCloseOrder) {
-            await this.updateCloseTrade(
+            openTrade = await this.updateCloseTrade(
               openTrade,
               this.secondExchange,
               secondPosition?.side ?? "buy",
