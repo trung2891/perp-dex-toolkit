@@ -2,8 +2,10 @@ import { IExchange } from "../../exchanges/base";
 import type { Order, OrderSide, Position } from "../../domain/types";
 import { randomBetween, randomIntegerBetween, sleep } from "../../helpers";
 import { TOKEN_AMOUNT_DECIMALS } from "../../config";
-import { TradeHistoryRepository } from "../../db/repositories/trade-history.repository";
-import type { TradeHistoryRecord } from "../../db/repositories/trade-history.repository";
+import type {
+  TradeHistoryRepository,
+  TradeHistoryRecord,
+} from "../../db/repositories";
 
 /**
  * Configuration for hedge strategy randomization
@@ -49,7 +51,7 @@ export class HedgeManager {
   constructor(
     private readonly firstExchange: IExchange,
     private readonly secondExchange: IExchange,
-    private readonly tradeHistoryRepository: TradeHistoryRepository,
+    private readonly tradeHistoryRepository?: TradeHistoryRepository,
     config?: Partial<HedgeConfig>
   ) {
     this.config = { ...DEFAULT_HEDGE_CONFIG, ...config };
@@ -188,32 +190,34 @@ export class HedgeManager {
     const longTransactionHash = longOrder[1] as string;
     const shortTransactionHash = shortOrder[1] as string;
 
-    // wait 1 second for the orders to be confirmed
-    await sleep(1000);
-    // get the matching info of the orders
-    const longMatchingInfo =
-      await this.firstExchange.getMatchingInfoFromTransactionHash(
-        symbol,
-        longTransactionHash
-      );
-    const shortMatchingInfo =
-      await this.secondExchange.getMatchingInfoFromTransactionHash(
-        symbol,
-        shortTransactionHash
-      );
+    // save the trade history (if repository is provided)
+    if (this.tradeHistoryRepository) {
+      // wait 1 second for the orders to be confirmed
+      await sleep(1000);
+      // get the matching info of the orders
+      const longMatchingInfo =
+        await this.firstExchange.getMatchingInfoFromTransactionHash(
+          symbol,
+          longTransactionHash
+        );
+      const shortMatchingInfo =
+        await this.secondExchange.getMatchingInfoFromTransactionHash(
+          symbol,
+          shortTransactionHash
+        );
 
-    // save the trade history
-    await this.tradeHistoryRepository.create({
-      symbol,
-      size: quantity.toString(),
-      status: "open",
-      openTimestamp: BigInt(Date.now()),
-      longAccount: firstSide === "buy" ? 1 : 2,
-      longOpenTx: longTransactionHash,
-      shortOpenTx: shortTransactionHash,
-      longEntryPrice: longMatchingInfo.price,
-      shortEntryPrice: shortMatchingInfo.price,
-    });
+      await this.tradeHistoryRepository.create({
+        symbol,
+        size: quantity.toString(),
+        status: "open",
+        openTimestamp: BigInt(Date.now()),
+        longAccount: firstSide === "buy" ? 1 : 2,
+        longOpenTx: longTransactionHash,
+        shortOpenTx: shortTransactionHash,
+        longEntryPrice: longMatchingInfo.price,
+        shortEntryPrice: shortMatchingInfo.price,
+      });
+    }
 
     return [longOrder, shortOrder];
   }
@@ -256,6 +260,11 @@ export class HedgeManager {
     positionSide: "buy" | "sell",
     txHash: string
   ): Promise<TradeHistoryRecord> {
+    // if not repository, return the trade
+    if (!this.tradeHistoryRepository) {
+      return trade;
+    }
+
     const matchingInfo = await exchange.getMatchingInfoFromTransactionHash(
       trade.symbol,
       txHash
@@ -302,14 +311,18 @@ export class HedgeManager {
   async closePositions(symbol: string): Promise<boolean> {
     // retry 5 times to close positions
 
-    // get the open trades from the trade history repository
-    const openTrades = await this.tradeHistoryRepository.findOpenTrades(symbol);
-    // open trade is the first one in the list, so we can get the first open trade
-    // warning if have more than one open trade
-    if (openTrades.length > 1) {
-      console.warn(`[HedgeManager] More than one open trade for ${symbol}`);
+    // get the open trades from the trade history repository (if available)
+    let openTrade: TradeHistoryRecord | undefined;
+    if (this.tradeHistoryRepository) {
+      const openTrades =
+        await this.tradeHistoryRepository.findOpenTrades(symbol);
+      // open trade is the first one in the list, so we can get the first open trade
+      // warning if have more than one open trade
+      if (openTrades.length > 1) {
+        console.warn(`[HedgeManager] More than one open trade for ${symbol}`);
+      }
+      openTrade = openTrades[0];
     }
-    let openTrade = openTrades[0];
 
     for (let i = 0; i < 5; i++) {
       try {
@@ -338,8 +351,8 @@ export class HedgeManager {
         }
 
         if (closePromises.length === 0) {
-          // mark the trade as closed
-          if (openTrade) {
+          // mark the trade as closed (if repository is available)
+          if (openTrade && this.tradeHistoryRepository) {
             await this.tradeHistoryRepository.closeTrade(openTrade.id, {
               closeTimestamp: BigInt(Date.now()),
             });

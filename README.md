@@ -12,13 +12,32 @@ npm install
 yarn install
 ```
 
-### Database Setup
+### Database Setup (Optional)
 
-This project uses Prisma with PostgreSQL for storing trade history.
+This project supports optional database persistence for trade history using Prisma with PostgreSQL.
 
-1. **Set up PostgreSQL database** and create a `.env` file with your database connection string:
+#### Running WITHOUT Database (Default)
+
+By default, the toolkit runs without database persistence. Trade operations are logged to console but not saved:
 
 ```bash
+# In your .env file (or omit entirely)
+DB_ENABLED=false
+```
+
+No database setup required! The toolkit will skip all database operations.
+
+#### Running WITH Database Persistence
+
+To enable database persistence:
+
+1. **Set up PostgreSQL database** and create a `.env` file:
+
+```bash
+# Enable database persistence
+DB_ENABLED=true
+
+# Database connection string
 DATABASE_URL="postgresql://user:password@localhost:5432/lfg_vault_farming"
 ```
 
@@ -45,6 +64,8 @@ yarn db:migrate
 ```bash
 yarn db:studio
 ```
+
+**Note:** When `DB_ENABLED=true`, you MUST provide a valid `DATABASE_URL` or the application will fail to start.
 
 ## Development
 

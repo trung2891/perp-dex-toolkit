@@ -1,4 +1,9 @@
-export { TradeHistoryRepository, tradeHistoryRepository } from "./trade-history.repository";
+// Export repository class and types
+export {
+  TradeHistoryRepository,
+  tradeHistoryRepository,
+} from "./trade-history.repository";
+
 export type {
   TradeStatus,
   CreateTradeHistoryInput,
@@ -7,4 +12,3 @@ export type {
   TradeHistoryFilters,
   TradeHistoryQueryOptions,
 } from "./trade-history.repository";
-

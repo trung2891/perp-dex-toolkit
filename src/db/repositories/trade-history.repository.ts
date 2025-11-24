@@ -111,8 +111,10 @@ export interface TradeHistoryQueryOptions {
 }
 
 /**
- * Repository for TradeHistory database operations.
+ * Database-backed repository for TradeHistory operations.
  * Handles conversion between Prisma Decimal types and string-based monetary values.
+ *
+ * This implementation persists all trade data to PostgreSQL via Prisma.
  */
 export class TradeHistoryRepository {
   /**
