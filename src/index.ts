@@ -42,9 +42,11 @@ function validateEnv(): Env {
 }
 
 let hedgeManager: HedgeManager | null = null;
+
+// TODO: move to cli config
 const config: HedgeConfig = {
-  minSizeUSD: 300,
-  maxSizeUSD: 600,
+  minSizeUSD: 100,
+  maxSizeUSD: 300,
   minSleepBetweenOrdersMs: 1000,
   maxSleepBetweenOrdersMs: 5000,
   minHoldTimeMs: 10000,
