@@ -17,6 +17,7 @@ import type {
   OrderBook,
   Position,
   Ticker,
+  MatchingInfo,
 } from "../domain/types";
 
 import {
@@ -50,7 +51,7 @@ export interface LighterConfig extends ExchangeConfig {
 export class LighterClient extends BaseExchange {
   readonly name = "lighter";
 
-  private signerClient: SignerClient;
+  signerClient: SignerClient;
   private apiClient: ApiClient;
   private orderApi: OrderApi;
   private accountApi: AccountApi;
@@ -280,10 +281,45 @@ export class LighterClient extends BaseExchange {
   }
 
   /**
+   * get order info from the transaction hash
+   */
+  async getMatchingInfoFromTransactionHash(
+    symbol: string,
+    transactionHash: string
+  ): Promise<MatchingInfo> {
+    // wait 5 seconds for the transaction to be confirmed
+    const res = await this.signerClient.waitForTransaction(
+      transactionHash,
+      5000,
+      2000
+    );
+    if (res.code != 200) {
+      throw new Error(
+        `Failed to get matching info from transaction hash: ${transactionHash}`
+      );
+    }
+
+    const marketHelper = await this.getMarketHelper(
+      Number(await this.resolveContractId(symbol))
+    );
+
+    const event = JSON.parse(res.event_info as any);
+    const matchingInfo: MatchingInfo = {
+      price: marketHelper
+        .unitsToPrice(Number(event.t.p?.toString() ?? "0"))
+        .toString(),
+      quantity: marketHelper
+        .unitsToAmount(Number(event.t.s?.toString() ?? "0"))
+        .toString(),
+    };
+    return matchingInfo;
+  }
+
+  /**
    * Close the exchange connection
    */
   async close(): Promise<void> {
-    // TODO: Clean up Lighter SDK client
+    // TODO: Clean up Lighter SDK clien`t
     await super.close();
   }
 }

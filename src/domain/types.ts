@@ -186,3 +186,11 @@ export interface ExchangeConfig {
   /** Additional exchange-specific config */
   [key: string]: unknown;
 }
+
+/**
+ * Matching info
+ */
+export interface MatchingInfo {
+  price: string; // price matched  of the order
+  quantity: string; // quantity matched of the order
+}

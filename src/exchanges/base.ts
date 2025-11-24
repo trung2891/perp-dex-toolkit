@@ -11,6 +11,7 @@ import type {
   OrderSide,
   OrderType,
   Position,
+  MatchingInfo,
   Ticker,
 } from "../domain/types";
 import type {
@@ -107,7 +108,7 @@ export interface IExchange {
    * @throws {BusinessError} If order is rejected (insufficient balance, invalid params, etc.)
    * @throws {RateLimitError} If rate limit is exceeded
    */
-  placeOrder(options: PlaceOrderOptions): Promise<Order>;
+  placeOrder(options: PlaceOrderOptions): Promise<any>;
 
   /**
    * Cancel an order
@@ -222,6 +223,19 @@ export interface IExchange {
   resolveContractId(symbol: string): Promise<string>;
 
   /**
+   * Get matching info from transaction hash
+   * @param symbol Trading pair symbol
+   * @param transactionHash Transaction hash
+   * @returns Matching info
+   * @throws {NetworkError} If network request fails
+   * @throws {BusinessError} If transaction hash not found
+   */
+  getMatchingInfoFromTransactionHash(
+    symbol: string,
+    transactionHash: string
+  ): Promise<MatchingInfo>;
+
+  /**
    * Check if exchange is connected and authenticated
    * @returns True if connected and authenticated
    */
@@ -259,6 +273,10 @@ export abstract class BaseExchange implements IExchange {
   abstract getTicker(symbol: string): Promise<Ticker>;
   abstract getOrderBook(symbol: string, depth?: number): Promise<OrderBook>;
   abstract resolveContractId(symbol: string): Promise<string>;
+  abstract getMatchingInfoFromTransactionHash(
+    symbol: string,
+    transactionHash: string
+  ): Promise<MatchingInfo>;
 
   /**
    * Get position for a specific symbol

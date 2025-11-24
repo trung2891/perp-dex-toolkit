@@ -1,0 +1,46 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+    provider = "prisma-client-js"
+    output   = "../../node_modules/.prisma/client"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+model TradeHistory {
+    id     Int     @id @default(autoincrement())
+    symbol String
+    size   Decimal @db.Decimal(20, 8)
+    status String // "open" or "close"
+
+    // Open fields
+    openTimestamp   BigInt
+    longOpenTx      String?
+    shortOpenTx     String?
+    longEntryPrice  Decimal? @db.Decimal(20, 8)
+    shortEntryPrice Decimal? @db.Decimal(20, 8)
+    longAccount     Int
+
+    // Close fields
+    closeTimestamp BigInt?
+    longCloseTx    String?
+    shortCloseTx   String?
+    longExitPrice  Decimal? @db.Decimal(20, 8)
+    shortExitPrice Decimal? @db.Decimal(20, 8)
+
+    // PnL fields
+    longPnl  Decimal? @db.Decimal(20, 8)
+    shortPnl Decimal? @db.Decimal(20, 8)
+    spread   Decimal? @db.Decimal(20, 8)
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@index([symbol])
+    @@index([status])
+    @@index([openTimestamp])
+}

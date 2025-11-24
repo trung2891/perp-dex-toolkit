@@ -2,6 +2,7 @@ import { LighterClient } from "../src/exchanges/lighter";
 import "dotenv/config";
 import { HedgeConfig, HedgeManager } from "../src/strategy/hedge/hedge";
 import { z } from "zod";
+import { createTradeHistoryRepository, disconnectPrisma } from "./db";
 
 const envSchema = z.object({
   LIGHTER_API_PRIVATE_KEY_1: z
@@ -22,6 +23,12 @@ const envSchema = z.object({
   LIGHTER_API_INDEX_2: z
     .string()
     .transform((val: string) => Number.parseInt(val, 10)),
+  DB_ENABLED: z
+    .string()
+    .optional()
+    .default("false")
+    .transform((val) => val === "true"),
+  DATABASE_URL: z.string().optional(),
 });
 
 type Env = z.infer<typeof envSchema>;
@@ -44,17 +51,24 @@ let hedgeManager: HedgeManager | null = null;
 
 // TODO: move to cli config
 const config: HedgeConfig = {
-  minSizeUSD: 100,
-  maxSizeUSD: 300,
+  minSizeUSD: 10,
+  maxSizeUSD: 30,
   minSleepBetweenOrdersMs: 1000,
   maxSleepBetweenOrdersMs: 5000,
-  minHoldTimeMs: 10000,
-  maxHoldTimeMs: 20000, // 5 minutes
+  minHoldTimeMs: 5000,
+  maxHoldTimeMs: 10000, // 10 seconds
   slippage: 0.02,
 };
 
 async function start() {
   const env = validateEnv();
+
+  // Validate DATABASE_URL if DB is enabled
+  if (env.DB_ENABLED && !env.DATABASE_URL) {
+    throw new Error(
+      "DATABASE_URL is required when DB_ENABLED=true. Please set DATABASE_URL in environment variables."
+    );
+  }
 
   const lighter_1 = new LighterClient({
     name: "lighter",
@@ -72,7 +86,15 @@ async function start() {
     apiKeyIndex: env.LIGHTER_API_INDEX_2,
   });
 
-  hedgeManager = new HedgeManager(lighter_1, lighter_2, config);
+  // Create repository based on DB_ENABLED configuration
+  const tradeHistoryRepository = createTradeHistoryRepository();
+
+  hedgeManager = new HedgeManager(
+    lighter_1,
+    lighter_2,
+    tradeHistoryRepository,
+    config
+  );
   await hedgeManager.initialize();
 
   await hedgeManager.run(["BTC", "ETH"]);
@@ -82,6 +104,8 @@ async function stop() {
   if (hedgeManager) {
     await hedgeManager.stop("BTC");
   }
+  // Gracefully disconnect from database if connected
+  await disconnectPrisma();
 }
 
 process.on("SIGINT", async () => {
