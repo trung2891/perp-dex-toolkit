@@ -144,9 +144,10 @@ export class HedgeManager {
       TOKEN_AMOUNT_DECIMALS[symbol as keyof typeof TOKEN_AMOUNT_DECIMALS] || 6
     );
     // second quantity = first quantity * (1 + random slippage)
-    const secondQuantity = (quantity * (1 + randomBetween(0, 0.0001))).toFixed(
-      TOKEN_AMOUNT_DECIMALS[symbol as keyof typeof TOKEN_AMOUNT_DECIMALS] || 6
-    );
+    const secondQuantity = (quantity * (1 + randomBetween(0.0001, 0.0005))) // 0.01% - 0.05%
+      .toFixed(
+        TOKEN_AMOUNT_DECIMALS[symbol as keyof typeof TOKEN_AMOUNT_DECIMALS] || 6
+      );
 
     const [longOrder, shortOrder] = await Promise.all([
       this.firstExchange.placeOrder({
