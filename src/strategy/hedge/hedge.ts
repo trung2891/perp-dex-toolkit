@@ -71,15 +71,16 @@ export class HedgeManager {
     symbol: string,
     sizeUSD: number,
     lastPrice: number
-  ): Promise<string> {
+  ): Promise<number> {
     if (lastPrice <= 0) {
       throw new Error(`Invalid price for ${symbol}: ${lastPrice}`);
     }
     // Calculate quantity with some precision (6 decimal places)
     const quantity = sizeUSD / lastPrice;
-    return quantity.toFixed(
-      TOKEN_AMOUNT_DECIMALS[symbol as keyof typeof TOKEN_AMOUNT_DECIMALS] || 6
-    );
+    // return quantity.toFixed(
+    //   TOKEN_AMOUNT_DECIMALS[symbol as keyof typeof TOKEN_AMOUNT_DECIMALS] || 6
+    // );
+    return quantity;
   }
 
   private calculatePriceWithSlippage(
@@ -139,6 +140,14 @@ export class HedgeManager {
     const secondClientOrderId =
       firstClientOrderId + randomIntegerBetween(1, 1000);
 
+    const firstQuantity = quantity.toFixed(
+      TOKEN_AMOUNT_DECIMALS[symbol as keyof typeof TOKEN_AMOUNT_DECIMALS] || 6
+    );
+    // second quantity = first quantity * (1 + random slippage)
+    const secondQuantity = (quantity * (1 + randomBetween(0, 0.0001))).toFixed(
+      TOKEN_AMOUNT_DECIMALS[symbol as keyof typeof TOKEN_AMOUNT_DECIMALS] || 6
+    );
+
     const [longOrder, shortOrder] = await Promise.all([
       this.firstExchange.placeOrder({
         clientOrderId: firstClientOrderId.toString(),
@@ -146,7 +155,7 @@ export class HedgeManager {
         contractId: firstContractId,
         side: firstSide,
         type: "market",
-        quantity: quantity,
+        quantity: firstQuantity,
         price: firstPrice.toString(),
         timeInForce: "IOC",
       }),
@@ -156,11 +165,14 @@ export class HedgeManager {
         contractId: secondContractId,
         side: secondSide,
         type: "market",
-        quantity: quantity,
+        quantity: secondQuantity,
         price: secondPrice.toString(),
         timeInForce: "IOC",
       }),
     ]);
+
+    // TODO: need to check all orders are placed successfully
+
     // console.log({ longOrder, shortOrder });
 
     // TODO: Replace with structured logging (pino/winston)
