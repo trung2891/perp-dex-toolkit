@@ -1,0 +1,41 @@
+version: "3.5"
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: lighter_farming_postgres
+    restart: always
+
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-lighter_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-lighter_secure_password}
+      POSTGRES_DB: ${POSTGRES_DB:-lighter_farming}
+
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-lighter_user} -d ${POSTGRES_DB:-lighter_farming}",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+    networks:
+      - lighter_network
+
+volumes:
+  postgres_data:
+    driver: local
+    name: lighter_farming_postgres_data
+
+networks:
+  lighter_network:
+    driver: bridge
+    name: lighter_farming_network
