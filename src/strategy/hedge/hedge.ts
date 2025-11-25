@@ -195,16 +195,20 @@ export class HedgeManager {
       // wait 1 second for the orders to be confirmed
       await sleep(1000);
       // get the matching info of the orders
-      const longMatchingInfo =
+      const firstMatchingInfo =
         await this.firstExchange.getMatchingInfoFromTransactionHash(
           symbol,
           longTransactionHash
         );
-      const shortMatchingInfo =
+      const secondMatchingInfo =
         await this.secondExchange.getMatchingInfoFromTransactionHash(
           symbol,
           shortTransactionHash
         );
+      const [longEntryPrice, shortEntryPrice] =
+        firstSide === "buy"
+          ? [firstMatchingInfo.price, secondMatchingInfo.price]
+          : [secondMatchingInfo.price, firstMatchingInfo.price];
 
       await this.tradeHistoryRepository.create({
         symbol,
@@ -214,8 +218,8 @@ export class HedgeManager {
         longAccount: firstSide === "buy" ? 1 : 2,
         longOpenTx: longTransactionHash,
         shortOpenTx: shortTransactionHash,
-        longEntryPrice: longMatchingInfo.price,
-        shortEntryPrice: shortMatchingInfo.price,
+        longEntryPrice: longEntryPrice,
+        shortEntryPrice: shortEntryPrice,
       });
     }
 
