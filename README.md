@@ -2,6 +2,11 @@
 
 A TypeScript toolkit for perpetual futures trading on multiple DEX exchanges. Modular, type-safe, and production-ready.
 
+## Supported Exchanges
+
+- **Lighter** (zkSync) - Fully integrated ✅
+- **Paradex** (Starknet) - Fully integrated ✅
+
 ## Setup
 
 Install dependencies:
@@ -98,3 +103,102 @@ Watch for changes and recompile:
 ```bash
 npm run watch
 ```
+
+## Exchange Integration
+
+### Lighter Exchange
+
+See `examples/lighter.ts` for usage examples.
+
+Configuration:
+```typescript
+import { LighterClient } from "./src/exchanges";
+
+const client = new LighterClient({
+  name: "lighter",
+  baseUrl: "https://mainnet.zklighter.elliot.ai",
+  apiKeyPrivateKey: process.env.LIGHTER_API_PRIVATE_KEY,
+  accountIndex: 0,
+  apiKeyIndex: 0,
+});
+```
+
+### Paradex Exchange
+
+See `examples/paradex.ts` and `docs/PARADEX_INTEGRATION.md` for detailed documentation.
+
+Configuration:
+```typescript
+import { ParadexClient } from "./src/exchanges";
+
+const client = new ParadexClient({
+  name: "paradex",
+  privateKey: process.env.PARADEX_PRIVATE_KEY,
+  accountAddress: process.env.PARADEX_ACCOUNT_ADDRESS,
+  environment: "testnet", // or "mainnet"
+});
+```
+
+**Environment Variables for Paradex:**
+```env
+PARADEX_PRIVATE_KEY=your_starknet_private_key
+PARADEX_ACCOUNT_ADDRESS=your_paradex_account_address
+PARADEX_ENVIRONMENT=testnet
+```
+
+## Project Structure
+
+```
+src/
+├── exchanges/          # Exchange client implementations
+│   ├── base.ts        # Base exchange interface
+│   ├── lighter.ts     # Lighter exchange client
+│   ├── paradex.ts     # Paradex exchange client
+│   └── index.ts       # Exchange exports
+├── domain/            # Domain types and errors
+│   ├── types.ts       # Trading types (Order, Position, etc.)
+│   └── errors.ts      # Error classifications
+├── strategy/          # Trading strategies
+│   └── hedge/         # Hedge strategy implementation
+├── db/                # Database layer (optional)
+│   ├── client.ts      # Prisma client
+│   ├── schema.prisma  # Database schema
+│   └── repositories/  # Data repositories
+└── index.ts           # Main entry point
+
+examples/              # Usage examples
+├── lighter.ts         # Lighter client examples
+└── paradex.ts         # Paradex client examples
+
+docs/                  # Documentation
+├── DATABASE_CONFIGURATION.md
+└── PARADEX_INTEGRATION.md
+```
+
+## Features
+
+### Trading Operations
+- Place orders (limit, market)
+- Cancel orders (individual or all)
+- Query order status
+- Manage positions
+- Account balances
+
+### Risk Management
+- Position sizing
+- Leverage control
+- Liquidation price calculation
+- PnL tracking (realized & unrealized)
+
+### Market Data
+- Real-time tickers
+- Order book snapshots
+- Funding rates
+- 24h statistics
+
+### Infrastructure
+- Multi-exchange abstraction
+- Type-safe API
+- Comprehensive error handling
+- Optional database persistence
+- Structured logging
