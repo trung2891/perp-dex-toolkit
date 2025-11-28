@@ -14,7 +14,8 @@
     "db:push": "prisma db push --schema=src/db/schema.prisma",
     "db:migrate": "prisma migrate dev --schema=src/db/schema.prisma",
     "db:studio": "prisma studio --schema=src/db/schema.prisma",
-    "db:migrate:deploy": "prisma migrate deploy --schema=src/db/schema.prisma"
+    "db:migrate:deploy": "prisma migrate deploy --schema=src/db/schema.prisma",
+    "postinstall": "patch-package"
   },
   "keywords": [],
   "author": "",
@@ -22,12 +23,14 @@
   "dependencies": {
     "@oraichain/lighter-ts-sdk": "^1.0.9",
     "@prisma/client": "^5.19.0",
-    "ccxt": "^4.5.22",
     "dotenv": "^17.2.3",
+    "ccxt": "^4.5.22",
     "zod": "^3.22.4"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
+    "patch-package": "^8.0.0",
+    "postinstall-postinstall": "^2.1.0",
     "prettier": "^3.2.5",
     "prisma": "^5.19.0",
     "ts-node": "^10.9.2",

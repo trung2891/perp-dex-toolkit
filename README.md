@@ -17,6 +17,8 @@ npm install
 yarn install
 ```
 
+**Note:** This project includes patches for the `ccxt` package to fix issues with automated trading on Paradex. These patches are automatically applied during installation via the `postinstall` script. See `patches/README.md` for details.
+
 ### Database Setup (Optional)
 
 This project supports optional database persistence for trade history using Prisma with PostgreSQL.
