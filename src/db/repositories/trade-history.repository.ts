@@ -11,6 +11,8 @@ export type TradeStatus = "open" | "close";
  * All monetary values are strings to maintain precision
  */
 export interface CreateTradeHistoryInput {
+  /** Service identifier for this trade */
+  serviceID: string;
   /** Trading pair symbol (e.g., 'ETH', 'BTC') */
   symbol: string;
   /** Trade size (base asset) */
@@ -61,6 +63,7 @@ export interface UpdateTradeHistoryInput {
  */
 export interface TradeHistoryRecord {
   id: number;
+  serviceID: string;
   symbol: string;
   size: string;
   status: TradeStatus;
@@ -86,6 +89,8 @@ export interface TradeHistoryRecord {
  * Query filters for trade history
  */
 export interface TradeHistoryFilters {
+  /** Filter by service ID */
+  serviceID?: string;
   /** Filter by symbol */
   symbol?: string;
   /** Filter by status */
@@ -149,6 +154,7 @@ export class TradeHistoryRepository {
   private toDomain(record: PrismaTradeHistory): TradeHistoryRecord {
     return {
       id: record.id,
+      serviceID: record.serviceID,
       symbol: record.symbol,
       size: this.decimalToString(record.size) ?? "0",
       status: record.status as TradeStatus,
@@ -177,6 +183,7 @@ export class TradeHistoryRepository {
   async create(input: CreateTradeHistoryInput): Promise<TradeHistoryRecord> {
     const record = await prisma.tradeHistory.create({
       data: {
+        serviceID: input.serviceID,
         symbol: input.symbol,
         size: this.stringToDecimal(input.size)!,
         status: input.status,
@@ -211,6 +218,10 @@ export class TradeHistoryRepository {
     options?: TradeHistoryQueryOptions
   ): Promise<TradeHistoryRecord[]> {
     const where: Prisma.TradeHistoryWhereInput = {};
+
+    if (filters?.serviceID) {
+      where.serviceID = filters.serviceID;
+    }
 
     if (filters?.symbol) {
       where.symbol = filters.symbol;
@@ -353,6 +364,10 @@ export class TradeHistoryRepository {
    */
   async count(filters?: TradeHistoryFilters): Promise<number> {
     const where: Prisma.TradeHistoryWhereInput = {};
+
+    if (filters?.serviceID) {
+      where.serviceID = filters.serviceID;
+    }
 
     if (filters?.symbol) {
       where.symbol = filters.symbol;

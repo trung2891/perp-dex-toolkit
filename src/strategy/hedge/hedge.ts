@@ -51,6 +51,7 @@ export class HedgeManager {
   constructor(
     private readonly firstExchange: IExchange,
     private readonly secondExchange: IExchange,
+    private readonly serviceID: string,
     private readonly tradeHistoryRepository?: TradeHistoryRepository,
     config?: Partial<HedgeConfig>
   ) {
@@ -211,6 +212,7 @@ export class HedgeManager {
           : [secondMatchingInfo.price, firstMatchingInfo.price];
 
       await this.tradeHistoryRepository.create({
+        serviceID: this.serviceID,
         symbol,
         size: quantity.toString(),
         status: "open",

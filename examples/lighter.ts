@@ -68,6 +68,7 @@ async function main() {
   const hedgeManager = new HedgeManager(
     lighter_1,
     lighter_2,
+    "lighter-example",
     tradeHistoryRepository,
     config
   );
