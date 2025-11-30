@@ -522,7 +522,7 @@ export class HedgeManager {
         }
 
         // always sleep for a small amount of time to avoid busy-waiting
-        await sleep(1000);
+        await sleep(4000);
       }
     } finally {
       this.isRunning = false;
