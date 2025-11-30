@@ -1,0 +1,12 @@
+diff --git a/node_modules/ccxt/dist/cjs/src/paradex.js b/node_modules/ccxt/dist/cjs/src/paradex.js
+index 0000000..0000000 100644
+--- a/node_modules/ccxt/dist/cjs/src/paradex.js
++++ b/node_modules/ccxt/dist/cjs/src/paradex.js
+@@ -2546,6 +2546,7 @@ class paradex extends Exchange {
+                 headers['PARADEX-STARKNET-SIGNATURE'] = query['signature'];
+                 headers['PARADEX-TIMESTAMP'] = query['timestamp'].toString();
+                 headers['PARADEX-SIGNATURE-EXPIRATION'] = query['expiration'].toString();
++                url += '?token_usage=interactive';
+             }
+             else if (path === 'onboarding') {
+                 headers['PARADEX-ETHEREUM-ACCOUNT'] = this.walletAddress;
