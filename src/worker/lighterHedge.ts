@@ -92,6 +92,7 @@ async function start() {
   hedgeManager = new HedgeManager(
     lighter_1,
     lighter_2,
+    "lighter-hedge",
     tradeHistoryRepository,
     config
   );

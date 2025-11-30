@@ -78,6 +78,7 @@ async function start() {
   hedgeManager = new HedgeManager(
     paradex_1,
     paradex_2,
+    "paradex-hedge",
     tradeHistoryRepository,
     config
   );

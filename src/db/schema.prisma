@@ -12,10 +12,11 @@ datasource db {
 }
 
 model TradeHistory {
-    id     Int     @id @default(autoincrement())
-    symbol String
-    size   Decimal @db.Decimal(20, 8)
-    status String // "open" or "close"
+    id        Int     @id @default(autoincrement())
+    serviceID String
+    symbol    String
+    size      Decimal @db.Decimal(20, 8)
+    status    String // "open" or "close"
 
     // Open fields
     openTimestamp   BigInt
@@ -40,6 +41,7 @@ model TradeHistory {
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
+    @@index([serviceID])
     @@index([symbol])
     @@index([status])
     @@index([openTimestamp])
