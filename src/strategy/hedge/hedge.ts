@@ -314,7 +314,7 @@ export class HedgeManager {
    * @param symbol Trading pair symbol to close positions for
    * @returns The closed orders
    */
-  async closePositions(symbol: string): Promise<boolean> {
+  async closePositions(symbol: string, retries: number = 10): Promise<boolean> {
     // retry 5 times to close positions
 
     // get the open trades from the trade history repository (if available)
@@ -330,7 +330,7 @@ export class HedgeManager {
       openTrade = openTrades[0];
     }
 
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < retries; i++) {
       try {
         // Get positions from both exchanges
         const firstPosition = await this.firstExchange.getPosition(symbol);
@@ -439,6 +439,22 @@ export class HedgeManager {
           // randomize the symbol
           const symbol = symbols[randomIntegerBetween(0, symbols.length - 1)];
 
+          // ensure positions are closed, and try open new positions
+          let positionsClosed = await this.closePositions(symbol);
+          if (!positionsClosed) {
+            console.error(
+              `[HedgeManager] Failed to close positions for ${symbol}`
+            );
+            continue;
+          }
+
+          // after positions are closed, sleep for a random time between 1 and 5 seconds to open new positions
+          const openNewPositionsTime = randomBetween(1000, 5000);
+          console.log(
+            `[HedgeManager] Sleeping for ${openNewPositionsTime / 1000} seconds to open new positions`
+          );
+          await sleep(openNewPositionsTime);
+
           // Generate random order size
           const randomSizeUSD = randomBetween(
             this.config.minSizeUSD,
@@ -448,15 +464,6 @@ export class HedgeManager {
           console.log(
             `[HedgeManager] Starting hedge cycle for ${symbol} with size: $${randomSizeUSD.toFixed(2)}`
           );
-
-          // ensure positions are closed
-          let positionsClosed = await this.closePositions(symbol);
-          if (!positionsClosed) {
-            console.error(
-              `[HedgeManager] Failed to close positions for ${symbol}`
-            );
-            continue;
-          }
 
           // randomize the side of the order
           const { firstSide, secondSide } =
@@ -472,34 +479,34 @@ export class HedgeManager {
             secondSide as OrderSide
           );
 
-          // Random time to keep positions open
-          const holdTime = randomBetween(
-            this.config.minHoldTimeMs,
-            this.config.maxHoldTimeMs
-          );
+          // // Random time to keep positions open
+          // const holdTime = randomBetween(
+          //   this.config.minHoldTimeMs,
+          //   this.config.maxHoldTimeMs
+          // );
 
-          // TODO: Replace with structured logging
-          console.log(
-            `[HedgeManager] Holding positions for ${(holdTime / 1000).toFixed(2)} seconds`
-          );
+          // // TODO: Replace with structured logging
+          // console.log(
+          //   `[HedgeManager] Holding positions for ${(holdTime / 1000).toFixed(2)} seconds`
+          // );
 
-          await sleep(holdTime);
+          // await sleep(holdTime);
 
-          // Check for interrupt before closing
-          if (!this.isRunning) {
-            break;
-          }
+          // // Check for interrupt before closing
+          // if (!this.isRunning) {
+          //   break;
+          // }
 
-          // Close positions
-          positionsClosed = await this.closePositions(symbol);
-          if (!positionsClosed) {
-            console.error(
-              `[HedgeManager] Failed to close positions for ${symbol}`
-            );
-            await sleep(1000);
-            // continue to ensure positions are closed
-            continue;
-          }
+          // // Close positions
+          // positionsClosed = await this.closePositions(symbol);
+          // if (!positionsClosed) {
+          //   console.error(
+          //     `[HedgeManager] Failed to close positions for ${symbol}`
+          //   );
+          //   await sleep(1000);
+          //   // continue to ensure positions are closed
+          //   continue;
+          // }
 
           // wait for sleep to open new positions
           const sleepTime = randomBetween(

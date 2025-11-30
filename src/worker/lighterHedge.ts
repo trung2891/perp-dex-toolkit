@@ -60,6 +60,21 @@ const config: HedgeConfig = {
   slippage: 0.02,
 };
 
+const SYMBOLS = [
+  { symbol: "PAXG", weight: 5 },
+  { symbol: "BNB", weight: 5 },
+  { symbol: "DOGE", weight: 2 },
+  { symbol: "TRX", weight: 3 },
+  { symbol: "OP", weight: 2 },
+  { symbol: "LINK", weight: 1 },
+  { symbol: "WLD", weight: 1 },
+  { symbol: "SUI", weight: 1 },
+  { symbol: "APT", weight: 1 },
+  { symbol: "ADA", weight: 1 },
+  { symbol: "ASTER", weight: 1 },
+  { symbol: "AVAX", weight: 1 },
+];
+
 async function start() {
   const env = validateEnv();
 
@@ -98,12 +113,22 @@ async function start() {
   );
   await hedgeManager.initialize();
 
-  await hedgeManager.run(["BTC", "ETH"]);
+  // mapping su symbols with weight
+  const symbols = SYMBOLS.flatMap((symbol) =>
+    Array(symbol.weight).fill(symbol.symbol)
+  );
+
+  console.log(symbols);
+
+  await hedgeManager.run(symbols);
 }
 
 async function stop() {
   if (hedgeManager) {
-    await hedgeManager.stop("BTC");
+    const symbols = SYMBOLS.map((symbol) => symbol.symbol);
+    for (const symbol of symbols) {
+      await hedgeManager.stop(symbol);
+    }
   }
   // Gracefully disconnect from database if connected
   await disconnectPrisma();
