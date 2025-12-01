@@ -25,8 +25,8 @@ async function main() {
 
   //   // place a market order
   const order = await client.placeOrder({
-    symbol: "ETH/USD:USDC",
-    contractId: "ETH/USD:USDC",
+    symbol: "ETH",
+    contractId: "ETH",
     side: "buy",
     type: "market",
     quantity: "0.005",
