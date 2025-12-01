@@ -1,8 +1,32 @@
 diff --git a/node_modules/ccxt/dist/cjs/src/paradex.js b/node_modules/ccxt/dist/cjs/src/paradex.js
-index 0000000..0000000 100644
+index 425e712..df7c9b7 100644
 --- a/node_modules/ccxt/dist/cjs/src/paradex.js
 +++ b/node_modules/ccxt/dist/cjs/src/paradex.js
-@@ -2546,6 +2546,7 @@ class paradex extends Exchange {
+@@ -202,7 +202,7 @@ class paradex extends paradex$1["default"] {
+                         'account/profile/max_slippage': 1,
+                         'account/profile/referral_code': 1,
+                         'account/profile/username': 1,
+-                        'auth': 1,
++                        'auth/{public_key}': 1,
+                         'onboarding': 1,
+                         'orders': 1,
+                         'orders/batch': 1,
+@@ -1211,7 +1211,7 @@ class paradex extends paradex$1["default"] {
+         params['account'] = account['address'];
+         params['timestamp'] = req['timestamp'];
+         params['expiration'] = req['expiration'];
+-        const response = await this.privatePostAuth(params);
++        const response = await this.privatePostAuthPublicKey(this.extend(params, { 'public_key': account['publicKey'] }));
+         //
+         // {
+         //     jwt_token: "ooooccxtooootoooootheoooomoonooooo"
+@@ -2541,11 +2541,12 @@ class paradex extends paradex$1["default"] {
+                 'PARADEX-PARTNER': this.safeString(this.options, 'broker', 'CCXT'),
+             };
+             // TODO: optimize
+-            if (path === 'auth') {
++            if (path === 'auth/{public_key}') {
+                 headers['PARADEX-STARKNET-ACCOUNT'] = query['account'];
                  headers['PARADEX-STARKNET-SIGNATURE'] = query['signature'];
                  headers['PARADEX-TIMESTAMP'] = query['timestamp'].toString();
                  headers['PARADEX-SIGNATURE-EXPIRATION'] = query['expiration'].toString();
